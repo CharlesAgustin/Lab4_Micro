@@ -4,33 +4,21 @@
 #include "ADC.h"
 #include "PWM.h"
 #include "SevenSegment.h"
+#include "Switch.h"
 
 enum state
 {
   wait_pressed,
-  debounced_pressed,
-  wait_released,
-  debounced_released
+  wait_released
 };
 
 volatile int current_state = wait_pressed;
 volatile unsigned int current_amount = 9;
 
-void initExternalInterrupt()
-{
-  DDRD &= ~(1 << DDD0);
-  PORTD |= (1<<PORTD0);
-  EICRA |= (1 << ISC00);  // Any logical change triggers INT0
-  EICRA &= ~(1 << ISC01); // (ISC01 = 0, ISC00 = 1 → Any change)
-
-  EIMSK |= (1 << INT0); // Enable INT0 interrupt
-                  // Enable global interrupts
-}
-
 int main()
 {
   // Initialize peripherals
-  initExternalInterrupt();
+  initSwitch();
   initTimer0(); // Debounce timer
   initTimer1(); // 10-sec countdown timer
   initADC();
@@ -41,6 +29,12 @@ int main()
 
   while (1)
   {
+    if (current_state != wait_pressed)
+    {
+      current_state = wait_pressed;
+      delayMs(50);
+    }
+
     unsigned int adc_value = readADC(); // Read potentiometer
     changeDutyCycle(adc_value);
   }
@@ -50,5 +44,7 @@ int main()
 
 ISR(INT0_vect)
 {
-  PORTC = 0xFF;
+  current_state = wait_released;
+  delayMs(50);
+  PORTC = 0xFF; // ganti dengan function nyalain seven segment
 }
