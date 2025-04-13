@@ -1,12 +1,13 @@
-// Author:
+// Authors: I MADE KENT ABIATAR WIRANATHA, ANDREW LIEMARTA, BARI FAKHRUDIN, CHARLES AGUSTIN
 // Net ID:
-// Date:
+// Date: 25-Mar-2025
 // Assignment: Lab 4
 //----------------------------------------------------------------------//
 
 #include "timer.h"
 
-/* Initialize timer 1, you should not turn the timer on here. Use CTC mode  .*/
+// Initialize timer 1
+// Use CTC mode
 void initTimer1()
 {
     // intialize  CTC mode = 0100
@@ -35,8 +36,8 @@ void delaySecond(unsigned int delay)
     }
 }
 
-/* Initialize timer 0, you should not turn the timer on here.
- * You will need to use CTC mode */
+/* Initialize timer 0,
+ * Use CTC mode */
 void initTimer0()
 {
     // intialize  CTC mode = 010

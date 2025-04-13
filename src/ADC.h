@@ -5,6 +5,6 @@
 
 void initADC();
 unsigned int readADC();
-unsigned int getMotorState(unsigned int adc_value);
+unsigned int DigitalSignal(int16_t adc_value);
 
 #endif

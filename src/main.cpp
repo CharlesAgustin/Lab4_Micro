@@ -11,6 +11,12 @@ enum state
   wait_pressed,
   wait_released
 };
+enum MotorState
+{
+  RUNNING,
+  STOPPED
+};
+volatile enum MotorState motorState = RUNNING;
 
 volatile int current_state = wait_pressed;
 volatile unsigned int current_amount = 9;
@@ -22,10 +28,11 @@ int main()
   initTimer0(); // Debounce timer
   initTimer1(); // 10-sec countdown timer
   initADC();
-  sei();
   initPWMPin();
   initPWMTimer3();
   initSevenSegmentPin();
+
+  sei();
 
   while (1)
   {
@@ -36,7 +43,14 @@ int main()
     }
 
     unsigned int adc_value = readADC(); // Read potentiometer
-    changeDutyCycle(adc_value);
+    if (motorState == RUNNING)
+    {
+      changeDutyCycle(adc_value);
+    }
+    else
+    {
+      changeDutyCycle(0); // Stop motor (duty = 0%)
+    }
   }
 
   return 0;
@@ -46,5 +60,5 @@ ISR(INT0_vect)
 {
   current_state = wait_released;
   delayMs(50);
-  PORTC = 0xFF; // ganti dengan function nyalain seven segment
+  PORTC = ~(PORTC); // ganti dengan function nyalain seven segment
 }
