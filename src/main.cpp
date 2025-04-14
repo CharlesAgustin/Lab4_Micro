@@ -1,3 +1,8 @@
+// Authors: I MADE KENT ABIATAR WIRANATHA, ANDREW LIEMARTA, BARI FAKHRUDIN, CHARLES AGUSTIN
+// Net ID: ,charlesagustin
+// Date: 25-Mar-2025
+// Assignment: Lab 4
+//----------------------------------------------------------------------//
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "Timer.h"

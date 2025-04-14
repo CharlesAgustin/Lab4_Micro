@@ -3,4 +3,5 @@
 #include <avr/io.h>
 
 void initSevenSegmentPin();
+void countdown();
 #endif
