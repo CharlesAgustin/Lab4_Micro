@@ -6,7 +6,7 @@ void initSwitch()
     PORTD |= (1 << PORTD0); // pull up resistor
     EIMSK |= (1 << INT0);   // Enable INT0 interrupt
 
-    // falling edge interrupt  ISC01=1 ISC00=0
-    EICRA |= (1 << ISC01);
+    // low level of INT interrupt  ISC01=0 ISC00=0
+    EICRA &= ~(1 << ISC01);
     EICRA &= ~(1 << ISC00);
 }

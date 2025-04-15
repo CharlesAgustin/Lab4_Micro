@@ -2,8 +2,8 @@
 
 // Initialize ADC with AVCC as reference, A0 as input
 
-#define TOP 0x3FF        // TOP flag for 10 bit PWM
-#define MIDDLE (TOP / 2) // Middle point of ADC (to stop)
+#define MAX 0x3FF        // Maximum value of 10 bit ADC
+#define MIDDLE (MAX / 2) // Middle point of ADC (to stop)
 #define SENSE 20         // to give some tolerance
 
 void initADC()
@@ -31,8 +31,18 @@ unsigned int readADC() // probably call in main function to be stored in a varib
 }
 
 // Generate digital signal based on voltage input
-unsigned int DigitialSignal(int16_t adc_value) // int16 is used to ensure that it can hold 16 byte
+MotorState GetMotorDirection(uint16_t adc_value) // int16 is used to ensure that it can hold 16 byte in unsigned
 {
-    int16_t value = (adc_value * 5) / 1023; // calculate the voltage to be turn into digital signal
-    return value;
+    if (adc_value < (MIDDLE - SENSE)) // checking the voltage of input, if it is lower than the middle point - sensitivity, then motor goes clockwise
+    {
+        return CLOCKWISE;
+    }
+    else if (adc_value > (MIDDLE + SENSE)) // checking the voltage of input, if it is higher than the middle point + sensitivity, then motor goes counter clockwise
+    {
+        return COUNTERCLOCKWISE;
+    }
+    else // if none of those two (meaning input is in middle), then motor stop
+    {
+        return STOP;
+    }
 }

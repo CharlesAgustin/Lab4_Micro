@@ -1,6 +1,9 @@
 #include "timer.h"
 #include "PWM.h"
 #include "ADC.h"
+#define TOP 0x3FF        // TOP flag of 10 bit PWM
+#define MIDDLE (TOP / 2) // Middle point of ADC (to stop)
+#define SENSE 20         // to give some tolerance
 
 void initPWMTimer3()
 {
@@ -24,35 +27,29 @@ void initPWMPin()
     DDRH |= (1 << DDH5) | (1 << DDH6); // Output to In1 and In2
     DDRB |= (1 << DDB4);               // Output to Enable 1
 }
-void changeDutyCycle(unsigned int adc)
+void changeDutyCycle(MotorState currentState, uint16_t adc)
 {
-    if (adc > 1023)
-        adc = 1023; // Clamp to 10-bit max
-
-    OCR3A = adc; // Set duty cycle for Timer 3, Channel A (Pin PH5)
-
-    // Optional: For dual direction motor control using L293D
-    // Based on voltage ranges:
-    // 0–2V (adc 0–410): clockwise
-    // 2–3V (adc 410–614): stop
-    // 3–5V (adc 615–1023): counter-clockwise
-
-    if (adc < 410)
+    uint16_t duty = 0;    // set Duty Cycle to be initally 0
+    switch (currentState) // checking the current state of the motor from ADC
     {
-        // Clockwise rotation
-        PORTB |= (1 << PB4);  // Enable motor driver channel 1
-        PORTH &= ~(1 << PH4); // Disable channel 2
+    case CLOCKWISE:
+        PORTH |= (1 << PH5);  // turn on direction 1
+        PORTH &= ~(1 << PH6); // turn off direction 2
+        PORTB |= (1 << PB4);  // turn on enable
+        duty = TOP - adc;
+        break;
+    case COUNTERCLOCKWISE:
+        PORTH &= ~(1 << PH5); // turn off direction 1
+        PORTH |= (1 << PH6);  // turn on direction 2
+        PORTB |= (1 << PB4);  // turn on enable
+        duty = adc;
+        break;
+    case STOP:
+        PORTB &= ~(1 << PB4); // turn off enable
+        PORTH &= ~(1 << PH5); // turn off direction 1
+        PORTH &= ~(1 << PH6); // turn off direction 2
+        duty = 0;
+        break;
     }
-    else if (adc > 614)
-    {
-        // Counter-clockwise rotation
-        PORTB &= ~(1 << PB4); // Disable channel 1
-        PORTH |= (1 << PH4);  // Enable channel 2
-    }
-    else
-    {
-        // Stop
-        PORTB &= ~(1 << PB4);
-        PORTH &= ~(1 << PH4);
-    }
+    OCR3A = duty; // Set duty cycle for Timer 3, OCR3A (PH5)
 }

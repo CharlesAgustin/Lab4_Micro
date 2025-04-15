@@ -3,8 +3,15 @@
 
 #include <avr/io.h>
 
+typedef enum
+{
+    CLOCKWISE,
+    COUNTERCLOCKWISE,
+    STOP
+} MotorState;
+
 void initADC();
 unsigned int readADC();
-unsigned int DigitalSignal(int16_t adc_value);
+MotorState GetMotorDirection(uint16_t adc_value);
 
 #endif
