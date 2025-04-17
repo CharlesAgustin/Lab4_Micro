@@ -1,5 +1,5 @@
 // Authors: I MADE KENT ABIATAR WIRANATHA, ANDREW LIEMARTA, BARI FAKHRUDIN, CHARLES AGUSTIN
-// Net ID:
+// Net ID: kentabiatar,andrewliemarta,barifakhrudin,charlesagustin
 // Date: 25-Mar-2025
 // Assignment: Lab 4
 //----------------------------------------------------------------------//
@@ -29,7 +29,8 @@ void delaySecond(unsigned int delay)
     OCR1A = ((1 * 16000000) / prescalar) - 1; // 15624 tick for 1 second
     for (unsigned int i = 0; i < delay; i++)  // keep on counting until reach the disered value of delay
     {
-        TCNT1 = 0; // reset timer counter
+        TCNT1 = 0;             // reset timer counter
+        TIFR1 |= (1 << OCF1A); // ensure the flag is down
         while (!(TIFR1 & (1 << OCF1A)))
             ;                  // do nothing when flag is down
         TIFR1 |= (1 << OCF1A); // set the flag down

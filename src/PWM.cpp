@@ -1,9 +1,8 @@
+#include "Arduino.h"
 #include "timer.h"
 #include "PWM.h"
 #include "ADC.h"
-#define TOP 0x3FF        // TOP flag of 10 bit PWM
-#define MIDDLE (TOP / 2) // Middle point of ADC (to stop)
-#define SENSE 20         // to give some tolerance
+#define sense 20 // add some tolerance to the value
 
 void initPWMTimer3()
 {
@@ -25,31 +24,54 @@ void initPWMTimer3()
 void initPWMPin()
 {
     DDRH |= (1 << DDH5) | (1 << DDH6); // Output to In1 and In2
-    DDRB |= (1 << DDB4);               // Output to Enable 1
+    DDRE |= (1 << DDE3);               // Output to Enable 1
 }
-void changeDutyCycle(MotorState currentState, uint16_t adc)
+void setMotorDirection(unsigned int direction)
 {
-    uint16_t duty = 0;    // set Duty Cycle to be initally 0
-    switch (currentState) // checking the current state of the motor from ADC
-    {
-    case CLOCKWISE:
-        PORTH |= (1 << PH5);  // turn on direction 1
-        PORTH &= ~(1 << PH6); // turn off direction 2
-        PORTB |= (1 << PB4);  // turn on enable
-        duty = TOP - adc;
-        break;
-    case COUNTERCLOCKWISE:
-        PORTH &= ~(1 << PH5); // turn off direction 1
-        PORTH |= (1 << PH6);  // turn on direction 2
-        PORTB |= (1 << PB4);  // turn on enable
-        duty = adc;
-        break;
-    case STOP:
-        PORTB &= ~(1 << PB4); // turn off enable
-        PORTH &= ~(1 << PH5); // turn off direction 1
-        PORTH &= ~(1 << PH6); // turn off direction 2
-        duty = 0;
-        break;
+    if (direction == 1)
+    {                         // CLockwise
+        PORTH |= (1 << PH5);  // Set PH3 high
+        PORTH &= ~(1 << PH6); // Set PH4 low
     }
-    OCR3A = duty; // Set duty cycle for Timer 3, OCR3A (PH5)
+    else
+    {                         // Counter Clockwise
+        PORTH |= (1 << PH6);  // Set PH4 high
+        PORTH &= ~(1 << PH5); // Set PH3 low
+    }
+}
+// Adjusts the PWM duty cycle based on ADC result
+void changeDutyCycle(unsigned int result)
+{
+
+    // Stopping the motor
+    if ((unsigned int)(1023 * 0.5) - sense <= result && result <= (unsigned int)(1023 * 0.5) + sense) // if the ADC value is between the middle +- tolerance, then it stops
+    {
+        OCR3A = 0; // Set OCR3A to 0 to stop motor
+    }
+    // Full Clockwise
+    else if (result == 1023) // if ADC value if 1023, then it goes clockwise at full speed
+    {
+        setMotorDirection(1); // set the direction to clockwise
+        OCR3A = 1023;         // Set OCR3A  to 1023 for full speed
+    }
+
+    // Full Counter Clockwise
+    else if (result == 0) // if ADC value is 0, then it goes counter clockwise at full speed
+    {
+        setMotorDirection(0); // set direction to counter clockwise
+        OCR3A = 1023;         // Set OCR3A to 1023 for full speed
+    }
+    // Counter Clockwise — decrease result from 511 to 0
+    else if (result < (unsigned int)(1023 * 0.5) - sense) // if ADC value is less than middle-tolerance, but not 0, then it moves counter clockwise at a changing speed (increase or decrease)
+    {
+        setMotorDirection(0);                                        // set direction to counter clockwise
+        OCR3A = (((unsigned int)(1023 * 0.5) - sense) - result) * 2; // increase speed as input moves further from midpoint
+    }
+
+    // Clockwise — increase result from 513 to 1023
+    else if (result > (unsigned int)(1023 * 0.5) + sense) // if ADC value is greater than middle-tolerance, but not 1023, then it moves clockwise at a changing speed (increase or decrease)
+    {
+        setMotorDirection(1);                                        // set direction to clockwise
+        OCR3A = (result - ((unsigned int)(1023 * 0.5) + sense)) * 2; // increase speed as input moves further from midpoint
+    }
 }
